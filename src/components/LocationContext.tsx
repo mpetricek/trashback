@@ -12,11 +12,13 @@ type GlobalContent = [
 ]
 */
 export interface locationData {
-    title?: string
+    place?: string
+    country_code?: string
     type?: string
     description?: string
     location?: [number, number]
     userLocation?: [number, number]
+    addLocation: boolean
 }
 const LocationContext = React.createContext<{
     locationData: locationData
@@ -28,11 +30,13 @@ const LocationContext = React.createContext<{
 
 const LocationProvider = (props) => {
     const [locationData, setLocationData] = useState<locationData>({
-        title: null,
+        place: null,
+        country_code: null,
         type: null,
         description: null,
         location: [null, null],
         userLocation: [null, null],
+        addLocation: false,
     })
 
     return (

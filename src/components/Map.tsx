@@ -10,7 +10,7 @@ const Map = (props) => {
     const size = UseWindowSize()
 
     React.useEffect(() => {
-        MapLeaflet = dynamic(() => import('./MapLeaflet'), {
+        MapLeaflet = dynamic(() => import('./MapLeaflet') as any, {
             ssr: false,
         })
         setMapLoaded(true)

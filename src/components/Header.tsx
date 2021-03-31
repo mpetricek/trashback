@@ -1,11 +1,12 @@
+import Link from 'next/link'
 import React from 'react'
 
 export default function Header() {
     return (
         <header>
-            <nav className="flex items-center justify-between flex-wrap p-6 fixed z-20 w-full">
-                <div className="flex items-center flex-no-shrink text-white">
-                    <div className="bg-white rounded-full p-5 py-2 shadow-md">
+            <nav>
+                <Link href="/">
+                    <a className="text-white bg-white rounded-full p-5 py-2 shadow-md z-20 fixed top-6 left-6">
                         <svg
                             height="100%"
                             viewBox="0 0 977 239"
@@ -44,9 +45,9 @@ export default function Header() {
                                 </linearGradient>
                             </defs>
                         </svg>
-                    </div>
-                </div>
-                <div className="block ml-auto">
+                    </a>
+                </Link>
+                <div className="block z-20 fixed top-6 right-6">
                     <button className="flex items-center p-3 bg-white shadow-md rounded-full text-green-500 hover:text-green-600">
                         <svg className="h-5 w-5" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <title>Menu</title>
