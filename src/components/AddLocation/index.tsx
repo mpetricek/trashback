@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { LocationContext } from '../LocationContext'
+import React, { useEffect, useState, useContext } from 'react'
+import Button from '../Button'
+import { TrashbackContext } from '../TrashbackContext'
 
 import Description from './Description'
 import DescriptionToggler from './DescriptionToggler'
@@ -10,19 +11,22 @@ import Photo from './Photo'
 
 import Pollution from './Pollution'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { solid } from '@fortawesome/fontawesome-svg-core/import.macro'
+
 export default function AddLocation() {
     const [LocationInputType, setLocationInputType] = useState('user')
     const [toggleDescriptionState, setToggleDescriptionState] = useState(false)
     const [toggleMapState, setToggleMapState] = useState(false)
-    const { locationData, setLocationData } = React.useContext(LocationContext)
+    const { trashbackData, setTrashbackData } = useContext(TrashbackContext)
 
     const onInputChange = (e) => {
         const { value, name } = e.target
-        setLocationData({ ...locationData, [name]: value })
+        setTrashbackData({ ...trashbackData, [name]: value })
     }
     const onSubmit = async (e, cleaned?) => {
         e.preventDefault()
-        const { place, country_code, type, description, location } = locationData
+        const { place, country_code, type, description, location } = trashbackData
         await fetch('/api/entry', {
             method: 'POST',
             body: JSON.stringify({
@@ -44,13 +48,13 @@ export default function AddLocation() {
 
     const toggleModal = (e) => {
         e.preventDefault()
-        setLocationData({ ...locationData, addLocation: !locationData.addLocation })
+        setTrashbackData({ ...trashbackData, addLocation: !trashbackData.addLocation })
     }
 
     const toggleLocationInputType = (e, type, location) => {
         e.preventDefault()
         setLocationInputType(type)
-        setLocationData({ ...locationData, location: location })
+        setTrashbackData({ ...trashbackData, location: location })
     }
 
     const toggleDescription = (e) => {
@@ -62,8 +66,8 @@ export default function AddLocation() {
         setToggleMapState(!toggleMapState)
     }
     useEffect(() => {
-        console.log(locationData)
-    }, [locationData])
+        console.log(trashbackData)
+    }, [trashbackData])
 
     return (
         <section>
@@ -83,11 +87,13 @@ export default function AddLocation() {
                 <span className="hidden lg:inline-block">Add Location</span>
             </button>
 
-            <div className={`fixed z-30 inset-0 overflow-y-auto ${locationData.addLocation ? 'visible' : 'invisible'}`}>
+            <div
+                className={`fixed z-30 inset-0 overflow-y-auto ${trashbackData.addLocation ? 'visible' : 'invisible'}`}
+            >
                 <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center block sm:p-0">
                     <div
                         className={`fixed inset-0 transition-opacity ${
-                            locationData.addLocation ? 'opacity-100' : 'opacity-0'
+                            trashbackData.addLocation ? 'opacity-100' : 'opacity-0'
                         }`}
                         aria-hidden="true"
                     >
@@ -100,7 +106,7 @@ export default function AddLocation() {
 
                     <div
                         className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full ${
-                            locationData.addLocation
+                            trashbackData.addLocation
                                 ? 'opacity-100 translate-y-0 sm:scale-100'
                                 : 'opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
                         }
@@ -135,7 +141,7 @@ export default function AddLocation() {
                                 </div>
                                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                     <div className="mb-4">
-                                        <Location locationData={locationData} />
+                                        <Location locationData={trashbackData} />
                                         <Pollution />
                                         <div className="flex flex-wrap">
                                             <hr className="flex-auto w-full mb-5" />
@@ -147,7 +153,7 @@ export default function AddLocation() {
 
                                         <Description
                                             toggleDescriptionState={toggleDescriptionState}
-                                            locationData={locationData}
+                                            locationData={trashbackData}
                                             onInputChange={onInputChange}
                                         />
 
@@ -167,7 +173,7 @@ export default function AddLocation() {
                                                             : 'border-gray-400 text-gray-400'
                                                     }`}
                                                     onClick={(e) =>
-                                                        toggleLocationInputType(e, 'user', locationData.userLocation)
+                                                        toggleLocationInputType(e, 'user', trashbackData.userLocation)
                                                     }
                                                 >
                                                     Use my location
@@ -187,38 +193,16 @@ export default function AddLocation() {
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                                    <button
-                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-purple-500 hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                                        type="submit"
-                                        onClick={(e) => onSubmit(e, true)}
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                            className="w-5 h-5 mr-2"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
+                                    <Button onClick={(e) => onSubmit(e, true)} className="sm:ml-3" purple>
+                                        <FontAwesomeIcon icon={solid('heart')} className="w-5 h-5 mr-2" />
                                         I've cleaned it
-                                    </button>
-                                    <button
-                                        className="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                                        type="submit"
-                                        onClick={(e) => onSubmit(e)}
-                                    >
+                                    </Button>
+                                    <Button onClick={(e) => onSubmit(e)} green className="sm:ml-3 mt-3 sm:mt-0 " submit>
                                         Add location
-                                    </button>
-                                    <button
-                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                                        onClick={(e) => toggleModal(e)}
-                                    >
+                                    </Button>
+                                    <Button onClick={(e) => toggleModal(e)} className=" mt-3 sm:mt-0">
                                         Cancel
-                                    </button>
+                                    </Button>
                                 </div>
                             </form>
                             <LocationMap toggleMapState={toggleMapState} toggleMap={toggleMap} />

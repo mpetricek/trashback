@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useContext, useMemo, useRef, useState } from 'react'
 import {
     MapContainer,
     Marker,
@@ -11,16 +11,15 @@ import {
     useMapEvents,
     useMap,
 } from 'react-leaflet'
-import L, { latLngBounds } from 'leaflet'
+import { icon, iconAdd, iconUser, iconCleaned } from './Markers'
+import { latLng, latLngBounds } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { LocationContext } from './LocationContext'
+import { TrashbackContext } from '../TrashbackContext'
 import geocoder from 'leaflet-control-geocoder'
-import Loader from './Loader'
+import Loader from '../Loader'
 
 export default function MapLeaflet(props) {
-    const [GeoDisabled, setGeoDisabled] = useState(false)
-
-    const { locationData, setLocationData } = React.useContext(LocationContext)
+    const { trashbackData, setTrashbackData } = useContext(TrashbackContext)
     const [locations, setLocations] = useState([])
 
     //const geocoder = LCG.L.Control.Geocoder.nominatim()
@@ -28,20 +27,23 @@ export default function MapLeaflet(props) {
         var geocoderFunc = geocoder.nominatim({ reverseQueryParams: { 'accept-language': 'en' } })
         geocoderFunc &&
             geocoderFunc.reverse(latlng, 13, (results) => {
+                console.log(latlng)
                 results[0] &&
-                    setLocationData({
-                        ...locationData,
+                    setTrashbackData({
+                        ...trashbackData,
                         place:
                             results[0].properties.address.city ||
                             results[0].properties.address.town ||
                             results[0].properties.address.village ||
                             results[0].properties.address.municipality,
                         location: [latlng.lat, latlng.lng],
-                        userLocation: user ? [latlng.lat, latlng.lng] : locationData.userLocation,
+                        userLocation: user ? [latlng.lat, latlng.lng] : trashbackData.userLocation,
                         country_code: results[0].properties.address.country_code,
                     })
             })
     }
+
+    // Get locations
     useEffect(() => {
         const fetchEntries = async () => {
             await fetch('/api/entries', { method: 'GET' })
@@ -50,25 +52,43 @@ export default function MapLeaflet(props) {
         }
         fetchEntries()
     }, [])
+
+    // Get user position
     useEffect(() => {
-        if (!navigator.geolocation) {
-            setGeoDisabled(true)
+        if (Object.keys(navigator.geolocation).length === 0) {
+            const fetchEntries = async () => {
+                await fetch('https://freegeoip.live/json/')
+                    .then((res) => res.json())
+                    .then((json) =>
+                        setTrashbackData({
+                            ...trashbackData,
+                            userLocation: [json.latitude, json.longitude],
+                        })
+                    )
+            }
+            fetchEntries()
         } else {
             navigator.geolocation.getCurrentPosition(function (position) {
-                setLocationData({
-                    ...locationData,
+                setTrashbackData({
+                    ...trashbackData,
                     userLocation: [position.coords.latitude, position.coords.longitude],
                 })
                 getAddress({ lat: position.coords.latitude, lng: position.coords.longitude }, true)
             })
         }
 
-        return () => {
-            //setUserLocation([])
-        }
+        // return () => {
+        //     setLocationData([])
+        // }
     }, [])
+
+    // Set center
     const position: [number, number] =
-        locationData.userLocation && locationData.userLocation[0] !== null ? locationData.userLocation : [53.14, 8.22]
+        trashbackData.userLocation && trashbackData.userLocation[0] !== null
+            ? trashbackData.userLocation
+            : [53.14, 8.22]
+
+    // Set tileLayer
     const tileLayer = {
         tiles: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
         attribution:
@@ -76,53 +96,6 @@ export default function MapLeaflet(props) {
         subdomains: 'abcd',
     }
 
-    const icon = (type?: string) => {
-        let color
-        switch (type) {
-            case 'light':
-                color = 'text-yellow-600'
-                break
-
-            case 'high':
-                color = 'text-gray-700'
-                break
-            default:
-                color = 'text-red-600'
-        }
-
-        return L.divIcon({
-            html:
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>',
-            className: 'bg-transparent ' + color,
-            iconRetinaUrl: '/img/map/marker.svg',
-            iconSize: [30, 30],
-        })
-    }
-
-    const iconAdd = () => {
-        return L.divIcon({
-            html:
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>',
-            className: 'text-white rounded-full bg-green-500',
-            iconSize: [25, 25],
-        })
-    }
-    const iconUser = () => {
-        return L.divIcon({
-            html:
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" /></svg>',
-            className: 'text-purple-500',
-            iconSize: [25, 25],
-        })
-    }
-    const iconCleaned = () => {
-        return L.divIcon({
-            html:
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" ><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>',
-            className: 'text-green-500',
-            iconSize: [25, 25],
-        })
-    }
     function ChangeView({ center, zoom }) {
         const map = useMap()
         map.setView(center, zoom)
@@ -134,8 +107,8 @@ export default function MapLeaflet(props) {
 
     const toggleAddLocation = (e?) => {
         e && e.preventDefault()
-        setLocationData({
-            ...locationData,
+        setTrashbackData({
+            ...trashbackData,
             addLocation: true,
         })
     }
@@ -157,7 +130,7 @@ export default function MapLeaflet(props) {
 
         return newLocation[0] !== null ? (
             <Marker
-                key={locationData.location && locationData.location[0]}
+                key={trashbackData.location && trashbackData.location[0]}
                 icon={iconAdd()}
                 position={newLocation}
                 ref={newRef}
@@ -188,11 +161,11 @@ export default function MapLeaflet(props) {
         null
     }
     const UserPosition = () => {
-        return locationData.userLocation[0] !== null ? (
+        return trashbackData.userLocation[0] !== null ? (
             <Marker
-                key={locationData.userLocation[0]}
+                key={trashbackData.userLocation[0]}
                 icon={iconUser()}
-                position={locationData.userLocation}
+                position={trashbackData.userLocation}
                 eventHandlers={{
                     click: () => {
                         toggleAddLocation()
@@ -216,7 +189,7 @@ export default function MapLeaflet(props) {
     //     return null
     // }
 
-    return locationData.userLocation[0] !== null ? (
+    return trashbackData.userLocation[0] !== null ? (
         <MapContainer
             zoom={20}
             className={props.className}
@@ -243,8 +216,8 @@ export default function MapLeaflet(props) {
 
             <NewMarkers />
             <UserPosition />
-            {locations.map((item, index) => (
-                <Marker key={index} icon={item.cleaned ? iconCleaned() : icon(item.type)} position={item.location}>
+            {locations.map((item) => (
+                <Marker key={item.id} icon={item.cleaned ? iconCleaned() : icon(item.type)} position={item.location}>
                     <Popup>
                         Town {item.town} Type: {item.type}
                     </Popup>

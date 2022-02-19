@@ -2,6 +2,7 @@ import db from '../../../utils/db'
 
 export default async (req, res) => {
     const requestBody = JSON.parse(req.body)
+
     try {
         const { slug } = requestBody
         const entries = await db.collection('entries').get()
@@ -19,6 +20,7 @@ export default async (req, res) => {
             ...requestBody,
             created: new Date().toISOString(),
         })
+
         res.status(200).json({ id })
     } catch (e) {
         res.status(400).end()

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { LocationContext } from './LocationContext'
+import { LocationContext } from './TrashbackContext'
 import Map from './Map'
 import Nouislider from 'nouislider-react'
 import 'nouislider/distribute/nouislider.css'

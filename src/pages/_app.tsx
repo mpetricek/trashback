@@ -1,11 +1,14 @@
 import Layout from '../components/Layout'
+import { SessionProvider } from 'next-auth/react'
 import 'tailwindcss/tailwind.css'
 import '../styles.css'
 //test
-export default function MyApp({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     return (
-        <Layout {...pageProps}>
-            <Component {...pageProps} />
-        </Layout>
+        <SessionProvider session={session}>
+            <Layout {...pageProps}>
+                <Component {...pageProps} />
+            </Layout>
+        </SessionProvider>
     )
 }
